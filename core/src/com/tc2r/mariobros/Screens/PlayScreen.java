@@ -13,13 +13,20 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.tc2r.mariobros.MarioBros;
 import com.tc2r.mariobros.Scenes.Hud;
+import com.tc2r.mariobros.Sprites.Enemies.Enemy;
+import com.tc2r.mariobros.Sprites.Items.Item;
+import com.tc2r.mariobros.Sprites.Items.ItemDef;
+import com.tc2r.mariobros.Sprites.Items.Mushroom;
 import com.tc2r.mariobros.Sprites.Mario;
 import com.tc2r.mariobros.Tools.B2WorldCreator;
 import com.tc2r.mariobros.Tools.WorldContactListener;
+
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by Tc2r on 10/8/2017.
@@ -46,11 +53,17 @@ public class PlayScreen implements Screen {
 	// Box2d variables
 	private World world;
 	private Box2DDebugRenderer box2DDebugRenderer;
+	private B2WorldCreator creator;
 
 	// Sprites
 	private Mario player; // Mario class object.
 
+
 	private Music music;
+
+	private Array<Item> items;
+	private LinkedBlockingQueue<ItemDef> itemsToSpawn;
+
 
 	public PlayScreen(MarioBros game) {
 
@@ -84,17 +97,35 @@ public class PlayScreen implements Screen {
 		world = new World(new Vector2(0, -10), true);
 
 
-		new B2WorldCreator(world, map);
+		creator = new B2WorldCreator(this);
 
-		player = new Mario(world, this);
+		player = new Mario(this);
 
 		world.setContactListener(new WorldContactListener());
 
 		music = MarioBros.manager.get("audio/music/mario_music.ogg", Music.class);
 		music.setLooping(true);
 		music.play();
+
+
+		items = new Array<Item>();
+		itemsToSpawn = new LinkedBlockingQueue<ItemDef>();
+
+
 	}
 
+	public void spawnItem(ItemDef iDef){
+		itemsToSpawn.add(iDef);
+	}
+
+	public void handleSpawningItems(){
+		if (!itemsToSpawn.isEmpty()) {
+			ItemDef idef = itemsToSpawn.poll();
+			if(idef.type == Mushroom.class){
+				items.add(new Mushroom(this, idef.position.x, idef.position.y));
+			}
+		}
+	}
 	public TextureAtlas getAtlas() {
 		return atlas;
 	}
@@ -105,16 +136,28 @@ public class PlayScreen implements Screen {
 
 	public void update(float delta) {
 		handleInput(delta);
+		handleSpawningItems();
 
 		world.step(1 / 60f, 6, 2);
 
 		player.update(delta);
+		for(Enemy enemy : creator.getGoombas()){
+			enemy.update(delta);
+			if (enemy.getX() < player.getX() + 224 / MarioBros.PPM) {
+				enemy.b2body.setActive(true);
+			}
+		}
+		for (Item item : items) {
+			item.update(delta);
+		}
+
 		hud.update(delta);
 
-		// everytime mario moves, we track him.
-		gamecam.position.x = player.b2body.getPosition().x;
-		gamecam.update();
-
+		// everytime mario moves, we track him. unless he is dead
+		if (player.currentState != Mario.State.DEAD) {
+			gamecam.position.x = player.b2body.getPosition().x;
+			gamecam.update();
+		}
 		//tell our renderer to draw only what our camera can see in our game world.
 		renderer.setView(gamecam);
 
@@ -125,6 +168,9 @@ public class PlayScreen implements Screen {
 	}
 
 	private void handleInput(float delta) {
+		if (player.currentState == Mario.State.DEAD) {
+			return;
+		}
 
 		if (Gdx.input.isKeyJustPressed(Input.Keys.UP)) {
 			// Impulse is immediate change.
@@ -162,6 +208,13 @@ public class PlayScreen implements Screen {
 		game.batch.setProjectionMatrix(gamecam.combined);
 		game.batch.begin();
 		player.draw(game.batch);
+		for(Enemy enemy : creator.getGoombas()){
+			enemy.draw(game.batch);
+		}
+		for (Item item : items) {
+			item.draw(game.batch);
+		}
+
 		game.batch.end();
 
 
@@ -175,6 +228,14 @@ public class PlayScreen implements Screen {
 	public void resize(int width, int height) {
 		viewport.update(width, height);
 
+	}
+
+	public TiledMap getMap(){
+		return map;
+	}
+
+	public World getWorld(){
+		return world;
 	}
 
 	@Override
