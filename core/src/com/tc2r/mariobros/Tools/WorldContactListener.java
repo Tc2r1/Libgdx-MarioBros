@@ -1,5 +1,6 @@
 package com.tc2r.mariobros.Tools;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
@@ -39,10 +40,10 @@ public class WorldContactListener implements ContactListener {
 
 				if (fixA.getFilterData().categoryBits == MarioBros.ENEMY_HEAD_BIT) {
 					// fixA is the enemy
-					((Enemy)fixA.getUserData()).hitOnHead();
+					((Enemy)fixA.getUserData()).hitOnHead((Mario) fixB.getUserData());
 				} else {
 					// fixB is the enemy
-					((Enemy) fixB.getUserData()).hitOnHead();
+					((Enemy) fixB.getUserData()).hitOnHead((Mario) fixA.getUserData());
 				}
 				break;
 
@@ -66,10 +67,11 @@ public class WorldContactListener implements ContactListener {
 			// Mario Collides with an Enemy
 			case MarioBros.MARIO_BIT | MarioBros.ENEMY_BIT:
 				if(fixA.getFilterData().categoryBits == MarioBros.MARIO_BIT)
-					((Mario) fixA.getUserData()).hit();
+					Gdx.app.log("testing", ((Enemy)fixB.getUserData()));
+					((Mario) fixA.getUserData()).hit((Enemy)fixB.getUserData());
 
 				if(fixB.getFilterData().categoryBits == MarioBros.MARIO_BIT)
-					((Mario) fixB.getUserData()).hit();
+					((Mario) fixB.getUserData()).hit((Enemy)fixA.getUserData());
 				break;
 
 

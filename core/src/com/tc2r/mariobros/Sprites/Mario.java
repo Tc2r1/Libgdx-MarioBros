@@ -18,6 +18,8 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.tc2r.mariobros.MarioBros;
 import com.tc2r.mariobros.Screens.PlayScreen;
+import com.tc2r.mariobros.Sprites.Enemies.Enemy;
+import com.tc2r.mariobros.Sprites.Enemies.Turtle;
 
 import static com.tc2r.mariobros.Sprites.Mario.State.JUMPING;
 
@@ -339,7 +341,13 @@ public class Mario extends Sprite {
 		setBounds(getX(), getY(), getWidth(), getHeight()*2);
 	}
 
-	public void hit(){
+	public void hit(Enemy enemy){
+		if(enemy instanceof Turtle && ((Turtle) enemy).getCurrentState() == Turtle.State.STANDING_SHELL){
+			((Turtle) enemy).kick(this.getX() <= enemy.getX() ? Turtle.KICK_RIGHT_SPEED : Turtle.KICK_LEFT_SPEED);
+
+		}
+
+
 		if(marioIsBig){
 			marioIsBig = false;
 			timeToRedefineMario = true;

@@ -12,6 +12,7 @@ import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.utils.Array;
 import com.tc2r.mariobros.MarioBros;
 import com.tc2r.mariobros.Screens.PlayScreen;
+import com.tc2r.mariobros.Sprites.Mario;
 
 /**
  * Created by Tc2r on 10/13/2017.
@@ -94,14 +95,10 @@ public class Goomba extends Enemy {
 		fixtureDef.filter.categoryBits = MarioBros.ENEMY_HEAD_BIT;
 		b2body.createFixture(fixtureDef).setUserData(this);
 
-
-
-
-
 	}
 
 	@Override
-	public void hitOnHead() {
+	public void hitOnHead(Mario mario) {
 		setToDestroy = true;
 		MarioBros.manager.get("audio/sounds/stomp.wav", Sound.class).play();
 	}

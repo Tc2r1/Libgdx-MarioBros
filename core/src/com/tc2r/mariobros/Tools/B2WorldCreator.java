@@ -12,9 +12,11 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.tc2r.mariobros.MarioBros;
 import com.tc2r.mariobros.Screens.PlayScreen;
+import com.tc2r.mariobros.Sprites.Enemies.Enemy;
+import com.tc2r.mariobros.Sprites.Enemies.Goomba;
+import com.tc2r.mariobros.Sprites.Enemies.Turtle;
 import com.tc2r.mariobros.Sprites.TileObjects.Brick;
 import com.tc2r.mariobros.Sprites.TileObjects.Coin;
-import com.tc2r.mariobros.Sprites.Enemies.Goomba;
 
 /**
  * Created by Tc2r on 10/8/2017.
@@ -25,6 +27,7 @@ import com.tc2r.mariobros.Sprites.Enemies.Goomba;
 public class B2WorldCreator {
 
 	private Array<Goomba> goombas;
+	private Array<Turtle> turtles;
 
 	private World world;
 	private TiledMap map;
@@ -87,9 +90,23 @@ public class B2WorldCreator {
 			goombas.add(new Goomba(screen, rect.getX()/MarioBros.PPM, rect.getY()/MarioBros.PPM));
 		}
 
+		// Create all turtles
+		turtles = new Array<Turtle>();
+		for (MapObject object : map.getLayers().get(7).getObjects().getByType(RectangleMapObject.class)) {
+			Rectangle rect = ((RectangleMapObject) object).getRectangle();
+
+			turtles.add(new Turtle(screen, rect.getX()/MarioBros.PPM, rect.getY()/MarioBros.PPM));
+		}
+
 	}
 
 	public Array<Goomba> getGoombas() {
 		return goombas;
+	}
+	public Array<Enemy> getEnemies(){
+		Array<Enemy> enemies = new Array<Enemy>();
+		enemies.addAll(goombas);
+		enemies.addAll(turtles);
+		return enemies;
 	}
 }
