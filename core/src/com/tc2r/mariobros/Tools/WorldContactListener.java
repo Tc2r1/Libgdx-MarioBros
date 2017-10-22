@@ -1,6 +1,5 @@
 package com.tc2r.mariobros.Tools;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
@@ -67,7 +66,7 @@ public class WorldContactListener implements ContactListener {
 			// Mario Collides with an Enemy
 			case MarioBros.MARIO_BIT | MarioBros.ENEMY_BIT:
 				if(fixA.getFilterData().categoryBits == MarioBros.MARIO_BIT)
-					Gdx.app.log("testing", ((Enemy)fixB.getUserData()));
+					//Gdx.app.log("testing", ((Enemy)fixB.getUserData()));
 					((Mario) fixA.getUserData()).hit((Enemy)fixB.getUserData());
 
 				if(fixB.getFilterData().categoryBits == MarioBros.MARIO_BIT)

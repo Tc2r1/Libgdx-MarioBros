@@ -1,6 +1,10 @@
 [
     {
-        "merged": "C:\\Users\\Tc2r\\Documents\\School\\Self\\LibGDX\\MarioBros\\android\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\ic_launcher.png",
-        "source": "C:\\Users\\Tc2r\\Documents\\School\\Self\\LibGDX\\MarioBros\\android\\res\\drawable-hdpi\\ic_launcher.png"
+        "merged": "/Users/nudennie.white/Libgdx-MarioBros/android/build/intermediates/res/merged/debug/drawable-hdpi-v4/ic_launcher.png",
+        "source": "/Users/nudennie.white/Libgdx-MarioBros/android/res/drawable-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/Users/nudennie.white/Libgdx-MarioBros/C:\\Users\\Tc2r\\Documents\\School\\Self\\LibGDX\\MarioBros\\android\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\ic_launcher.png",
+        "source": "/Users/nudennie.white/Libgdx-MarioBros/C:\\Users\\Tc2r\\Documents\\School\\Self\\LibGDX\\MarioBros\\android\\res\\drawable-hdpi\\ic_launcher.png"
     }
 ]
