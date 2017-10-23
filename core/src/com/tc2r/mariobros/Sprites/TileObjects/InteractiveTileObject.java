@@ -52,6 +52,8 @@ public abstract class InteractiveTileObject {
 		shape.setAsBox(bounds.getWidth() / 2 / MarioBros.PPM, bounds.getHeight() / 2 / MarioBros.PPM);
 		fixtureDef.shape = shape;
 		fixture = body.createFixture(fixtureDef);
+		shape.dispose();
+
 	}
 
 	public abstract void onHeadHit(Mario mario);

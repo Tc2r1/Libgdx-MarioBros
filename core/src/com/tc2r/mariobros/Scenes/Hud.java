@@ -19,20 +19,26 @@ import com.tc2r.mariobros.MarioBros;
  */
 
 public class Hud implements Disposable{
+
+	// Scene2D.Ui Stage and it's own Viewport for HUD
 	public Stage stage;
 	private Viewport viewport;
 
-
+	// Mario score/time tracking variables
 	private Integer worldTimer;
 	private float timeCount;
+	private boolean timeUp; // true when the world timer reaches zero.
 	private static Integer score;
 
+
+	//Scene2D widgets
 	private Label countDownLabel;
 	private static Label scoreLabel;
 	private Label timeLabel;
 	private Label levelLabel;
 	private Label worldLabel;
 	private Label marioLabel;
+
 
 	public Hud(SpriteBatch batch) {
 		worldTimer = 300;
@@ -62,10 +68,8 @@ public class Hud implements Disposable{
 		table.add(countDownLabel).expandX();
 
 		stage.addActor(table);
-
-
-
 	}
+
 	public void update(float delta){
 		timeCount += delta;
 		if (timeCount >= 1) {
@@ -84,5 +88,10 @@ public class Hud implements Disposable{
 	public void dispose() {
 		stage.dispose();
 
+
+	}
+
+	public boolean isTimeUp() {
+		return timeUp;
 	}
 }

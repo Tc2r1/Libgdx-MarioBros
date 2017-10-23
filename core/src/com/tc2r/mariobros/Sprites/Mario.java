@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
@@ -20,6 +21,7 @@ import com.tc2r.mariobros.MarioBros;
 import com.tc2r.mariobros.Screens.PlayScreen;
 import com.tc2r.mariobros.Sprites.Enemies.Enemy;
 import com.tc2r.mariobros.Sprites.Enemies.Turtle;
+import com.tc2r.mariobros.Sprites.Other.FireBall;
 
 import static com.tc2r.mariobros.Sprites.Mario.State.JUMPING;
 
@@ -47,12 +49,17 @@ public class Mario extends Sprite {
 	private boolean timeToDefineBigMario;
 	private boolean timeToRedefineMario;
 	private float stateTimer;
+	private PlayScreen screen;
+
+	private static Array<FireBall> fireBalls;
+	private FireBall fireball;
 
 
 
 
 	public Mario(PlayScreen screen) {
 
+		this.screen = screen;
 		this.world = screen.getWorld();
 		currentState = State.STANDING;
 		previousState = State.STANDING;
@@ -81,6 +88,7 @@ public class Mario extends Sprite {
 		// clear frames for next animation sequence.
 		frames.clear();
 
+
 		// get set animation frames from growing mario.
 		frames.add(new TextureRegion(screen.getAtlas().findRegion("big_mario"), 240, 0, 16,32));
 		frames.add(new TextureRegion(screen.getAtlas().findRegion("big_mario"), 0, 0, 16,32));
@@ -105,6 +113,8 @@ public class Mario extends Sprite {
 		defineMario();
 		setBounds(0,0, 16/ MarioBros.PPM, 16/MarioBros.PPM);
 		setRegion(marioStand);
+
+		fireBalls = new Array<FireBall>();
 	}
 
 	public boolean isBig() {
@@ -120,6 +130,13 @@ public class Mario extends Sprite {
 	}
 
 	public void update(float delta) {
+
+		// Time runs out, Mario dies.
+
+		if (screen.getHud().isTimeUp() && !isDead()){
+			killMario();
+			fireBalls.clear();
+		}
 
 		if(marioIsBig){
 			//update sprite to correspond with the position of Box2D body
@@ -138,15 +155,24 @@ public class Mario extends Sprite {
 		if (timeToRedefineMario) {
 			redefineMario();
 		}
-
+		for (FireBall fireball : fireBalls) {
+			if(fireball.isDestroyed()){
+				fireBalls.removeValue(fireball, true);
+				return;
+			} else{
+				fireball.update(delta);
+			}
+		}
 	}
-
 
 
 	public TextureRegion getFrame(float delta) {
 
+		// Get mario's current State!
 		currentState = getState();
 		TextureRegion region;
+
+		// Set animation keyframe by state.
 		switch (currentState) {
 			case DEAD:
 				region = marioDead;
@@ -175,6 +201,7 @@ public class Mario extends Sprite {
 		if((b2body.getLinearVelocity().x < 0 || !runningRight) && !region.isFlipX()){
 			region.flip(true, false);
 			runningRight = false;
+
 		} else if ((b2body.getLinearVelocity().x > 0 || runningRight) && region.isFlipX()) {
 			region.flip(true, false);
 			runningRight = true;
@@ -207,6 +234,7 @@ public class Mario extends Sprite {
 			return State.STANDING;
 		}
 	}
+
 	public void redefineMario() {
 
 		Vector2 position = b2body.getPosition();
@@ -236,6 +264,7 @@ public class Mario extends Sprite {
 		EdgeShape feet = new EdgeShape();
 		feet.set(new Vector2(-2 / MarioBros.PPM, -6 / MarioBros.PPM), new Vector2(2 / MarioBros.PPM, -6 / MarioBros.PPM));
 		fixtureDef.shape = feet;
+		fixtureDef.filter.categoryBits = MarioBros.MARIO_FEET_BIT;
 		b2body.createFixture(fixtureDef);
 
 		EdgeShape head = new EdgeShape();
@@ -246,6 +275,10 @@ public class Mario extends Sprite {
 		b2body.createFixture(fixtureDef).setUserData(this);
 
 		timeToRedefineMario = false;
+
+		shape.dispose();
+		head.dispose();
+		feet.dispose();
 	}
 
 
@@ -274,7 +307,6 @@ public class Mario extends Sprite {
 
 		fixtureDef.shape = shape;
 		b2body.createFixture(fixtureDef).setUserData(this);
-
 		shape.setPosition(new Vector2(0,-14/MarioBros.PPM));
 		b2body.createFixture(fixtureDef).setUserData(this);
 
@@ -282,6 +314,7 @@ public class Mario extends Sprite {
 		EdgeShape feet = new EdgeShape();
 		feet.set(new Vector2(-2 / MarioBros.PPM, -6 / MarioBros.PPM), new Vector2(2 / MarioBros.PPM, -6 / MarioBros.PPM));
 		fixtureDef.shape = feet;
+		fixtureDef.filter.categoryBits = MarioBros.MARIO_FEET_BIT;
 		b2body.createFixture(fixtureDef);
 
 		EdgeShape head = new EdgeShape();
@@ -292,9 +325,11 @@ public class Mario extends Sprite {
 		b2body.createFixture(fixtureDef).setUserData(this);
 
 		timeToDefineBigMario = false;
-
-
+		shape.dispose();
+		head.dispose();
+		feet.dispose();
 	}
+
 	public void defineMario() {
 		BodyDef bodyDef = new BodyDef();
 		bodyDef.position.set(32 / MarioBros.PPM, 32 / MarioBros.PPM);
@@ -316,10 +351,10 @@ public class Mario extends Sprite {
 		fixtureDef.shape = shape;
 		b2body.createFixture(fixtureDef).setUserData(this);
 
-
 		EdgeShape feet = new EdgeShape();
 		feet.set(new Vector2(-2 / MarioBros.PPM, -6 / MarioBros.PPM), new Vector2(2 / MarioBros.PPM, -6 / MarioBros.PPM));
 		fixtureDef.shape = feet;
+		fixtureDef.filter.categoryBits = MarioBros.MARIO_FEET_BIT;
 		b2body.createFixture(fixtureDef);
 
 		EdgeShape head = new EdgeShape();
@@ -328,10 +363,10 @@ public class Mario extends Sprite {
 		fixtureDef.shape = head;
 		fixtureDef.isSensor = true;
 		b2body.createFixture(fixtureDef).setUserData(this);
-
+		shape.dispose();
+		head.dispose();
+		feet.dispose();
 	}
-
-
 
 	public void grow() {
 		runGrowAnimation = true;
@@ -345,15 +380,20 @@ public class Mario extends Sprite {
 		if(enemy instanceof Turtle && ((Turtle) enemy).getCurrentState() == Turtle.State.STANDING_SHELL){
 			((Turtle) enemy).kick(this.getX() <= enemy.getX() ? Turtle.KICK_RIGHT_SPEED : Turtle.KICK_LEFT_SPEED);
 
+		} else{
+			if(marioIsBig){
+				marioIsBig = false;
+				timeToRedefineMario = true;
+				setBounds(getX(), getY(), getWidth(), getHeight()/2);
+				MarioBros.manager.get("audio/sounds/powerdown.wav", Sound.class).play();
+			} else {
+				killMario();
+			}
 		}
+	}
 
-
-		if(marioIsBig){
-			marioIsBig = false;
-			timeToRedefineMario = true;
-			setBounds(getX(), getY(), getWidth(), getHeight()/2);
-			MarioBros.manager.get("audio/sounds/powerdown.wav", Sound.class).play();
-		} else {
+	public void killMario() {
+		if(!isDead()) {
 			MarioBros.manager.get("audio/music/mario_music.ogg", Music.class).stop();
 			MarioBros.manager.get("audio/sounds/mariodie.wav", Sound.class).play();
 			marioIsDead = true;
@@ -362,9 +402,32 @@ public class Mario extends Sprite {
 			for (Fixture fixture :
 							b2body.getFixtureList()) {
 				fixture.setFilterData(filter);
-				b2body.applyLinearImpulse(new Vector2(0, 1f), b2body.getWorldCenter(), true);
+				b2body.applyLinearImpulse(new Vector2(0, 2f), b2body.getWorldCenter(), true);
+
 			}
 		}
+	}
+
+	public void fire(){
+		if (runningRight) {
+			fireball = new FireBall(screen, b2body.getPosition().x, b2body.getPosition().y, true);
+		} else {
+			fireball = new FireBall(screen, b2body.getPosition().x, b2body.getPosition().y, false);
+		}
+		fireBalls.add(fireball);
+	}
+
+	public void draw(Batch batch) {
+		super.draw(batch);
+		for (FireBall fireball : fireBalls) {
+			if(!fireball.isDestroyed()) {
+				fireball.draw(batch);
+			}
+		}
+	}
+
+	public static void removeFireBall(FireBall fireBall) {
+		fireBalls.removeValue(fireBall, true);
 	}
 
 }

@@ -44,6 +44,7 @@ public class Coin extends com.tc2r.mariobros.Sprites.TileObjects.InteractiveTile
 				screen.spawnItem(new ItemDef(new Vector2(body.getPosition().x, body.getPosition().y + 16 / MarioBros.PPM),
 								Mushroom.class));
 				MarioBros.manager.get("audio/sounds/powerup_spawn.wav", Sound.class).play();
+
 			} else{
 				MarioBros.manager.get("audio/sounds/coin.wav", Sound.class).play();
 			}

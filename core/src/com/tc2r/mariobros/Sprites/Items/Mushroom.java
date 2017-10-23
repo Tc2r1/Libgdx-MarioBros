@@ -42,13 +42,17 @@ public class Mushroom extends Item {
 
 		fixtureDef.shape = shape;
 		body.createFixture(fixtureDef).setUserData(this);
+
+		shape.dispose();
 	}
 
 	@Override
 	public void use(Mario mario) {
-		mario.grow();
-		destroy();
+		if(!mario.isBig()) {
+			mario.grow();
 
+		}
+		destroy();
 	}
 
 	@Override

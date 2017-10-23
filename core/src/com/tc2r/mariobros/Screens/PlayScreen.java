@@ -39,6 +39,7 @@ public class PlayScreen implements Screen {
 	//Reference to our Game, used to set Screens
 	private MarioBros game;
 	private TextureAtlas atlas;
+	public static boolean alreadyDestroyed = false;
 
 	// Basic playscreen variables
 	private OrthographicCamera gamecam;
@@ -55,10 +56,9 @@ public class PlayScreen implements Screen {
 	private Box2DDebugRenderer box2DDebugRenderer;
 	private B2WorldCreator creator;
 
+
 	// Sprites
 	private Mario player; // Mario class object.
-
-
 	private Music music;
 
 	private Array<Item> items;
@@ -75,7 +75,9 @@ public class PlayScreen implements Screen {
 		gamecam = new OrthographicCamera();
 
 		// Create a Fitviewport to maintain virtual aspect ratio despite screen size.
-		viewport = new FitViewport(MarioBros.V_WIDTH /MarioBros.PPM, MarioBros.V_HEIGHT / MarioBros.PPM, gamecam);
+
+		  viewport = new FitViewport(MarioBros.V_WIDTH /MarioBros.PPM, MarioBros.V_HEIGHT / MarioBros.PPM, gamecam);
+		viewport.setCamera(gamecam);
 
 		// Create the game HUD for scores/timers/level info
 		hud = new Hud(game.batch);
@@ -105,13 +107,11 @@ public class PlayScreen implements Screen {
 
 		music = MarioBros.manager.get("audio/music/mario_music.ogg", Music.class);
 		music.setLooping(true);
+		music.setVolume(.3f);
 		music.play();
-
 
 		items = new Array<Item>();
 		itemsToSpawn = new LinkedBlockingQueue<ItemDef>();
-
-
 	}
 
 	public void spawnItem(ItemDef iDef){
@@ -135,36 +135,39 @@ public class PlayScreen implements Screen {
 	}
 
 	public void update(float delta) {
+		// handle user inputs first
 		handleInput(delta);
 		handleSpawningItems();
 
+		// takes 1 step in the physics simulation(60 times per second)
 		world.step(1 / 60f, 6, 2);
 
+		// update player actions
 		player.update(delta);
+
+		// update enemy actions
 		for(Enemy enemy : creator.getEnemies()){
 			enemy.update(delta);
 			if (enemy.getX() < player.getX() + 224 / MarioBros.PPM) {
 				enemy.b2body.setActive(true);
 			}
 		}
+
 		for (Item item : items) {
 			item.update(delta);
 		}
 
+		// update Display
 		hud.update(delta);
 
-		// everytime mario moves, we track him. unless he is dead
+		// every time mario moves, we track him. unless he is dead
 		if (player.currentState != Mario.State.DEAD) {
 			gamecam.position.x = player.b2body.getPosition().x;
-			gamecam.update();
+
 		}
+		gamecam.update();
 		//tell our renderer to draw only what our camera can see in our game world.
 		renderer.setView(gamecam);
-
-
-
-
-
 	}
 
 	private void handleInput(float delta) {
@@ -176,17 +179,16 @@ public class PlayScreen implements Screen {
 			// Impulse is immediate change.
 			player.b2body.applyLinearImpulse(new Vector2(0,4f), player.b2body.getWorldCenter(), true);
 		}
-
 		if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) &&
 						player.b2body.getLinearVelocity().x <= 2){
 			player.b2body.applyLinearImpulse(new Vector2(0.1f, 0f), player.b2body.getWorldCenter(), true);
-
 		}
-
 		if (Gdx.input.isKeyPressed(Input.Keys.LEFT) &&
 						player.b2body.getLinearVelocity().x >= -2){
 			player.b2body.applyLinearImpulse(new Vector2(-0.1f, 0f), player.b2body.getWorldCenter(), true);
-
+		}
+		if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+			player.fire();
 		}
 	}
 
@@ -196,7 +198,7 @@ public class PlayScreen implements Screen {
 	public void render(float delta) {
 		update(delta);
 
-		Gdx.gl.glClearColor(1,0,0,1);
+		Gdx.gl.glClearColor(0,0,0,1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 		// Render our game map
@@ -205,6 +207,7 @@ public class PlayScreen implements Screen {
 		// renderer our Box2DDebugLines
 		box2DDebugRenderer.render(world, gamecam.combined);
 
+		// Draw Everything.
 		game.batch.setProjectionMatrix(gamecam.combined);
 		game.batch.begin();
 		player.draw(game.batch);
@@ -214,20 +217,29 @@ public class PlayScreen implements Screen {
 		for (Item item : items) {
 			item.draw(game.batch);
 		}
-
 		game.batch.end();
-
-
-
 		// Set batch to draw what the hut camera sees.
 		game.batch.setProjectionMatrix(hud.stage.getCamera().combined);
 		hud.stage.draw();
+
+		if (gameOver()) {
+			game.setScreen(new GameOverScreen(game));
+			dispose();
+		}
 	}
 
 	@Override
 	public void resize(int width, int height) {
+
+		//update the game viewports
 		viewport.update(width, height);
 
+	}
+	public boolean gameOver(){
+		if (player.currentState == Mario.State.DEAD && player.getStateTimer() > 3) {
+			return true;
+		}
+		return false;
 	}
 
 	public TiledMap getMap(){
@@ -236,6 +248,10 @@ public class PlayScreen implements Screen {
 
 	public World getWorld(){
 		return world;
+	}
+
+	public Hud getHud() {
+		return hud;
 	}
 
 	@Override
@@ -261,7 +277,5 @@ public class PlayScreen implements Screen {
 		box2DDebugRenderer.dispose();
 		hud.dispose();
 		map.dispose();
-
-
 	}
 }

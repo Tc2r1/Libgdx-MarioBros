@@ -13,6 +13,7 @@ import com.badlogic.gdx.utils.Array;
 import com.tc2r.mariobros.MarioBros;
 import com.tc2r.mariobros.Screens.PlayScreen;
 import com.tc2r.mariobros.Sprites.Mario;
+import com.tc2r.mariobros.Tools.B2WorldCreator;
 
 /**
  * Created by Tc2r on 10/13/2017.
@@ -51,6 +52,7 @@ public class Wombo extends Enemy {
 		if (setToDestroy && !destroyed) {
 			world.destroyBody(b2body);
 			destroyed = true;
+			B2WorldCreator.removeEnemy(this);
 			setRegion(new TextureRegion(screen.getAtlas().findRegion("goomba"), 32, 0, 16, 16));
 			stateTime = 0;
 
@@ -81,6 +83,7 @@ public class Wombo extends Enemy {
 						MarioBros.COIN_BIT |
 						MarioBros.BRICK_BIT |
 						MarioBros.ENEMY_BIT |
+						MarioBros.FIREBALL_BIT|
 						MarioBros.MARIO_BIT |
 						MarioBros.OBJECT_BIT;
 
@@ -101,12 +104,30 @@ public class Wombo extends Enemy {
 		fixtureDef.filter.categoryBits = MarioBros.ENEMY_HEAD_BIT;
 		b2body.createFixture(fixtureDef).setUserData(this);
 
+		shape.dispose();
+		head.dispose();
+
+	}
+
+	@Override
+	public void onEnemyHit(Enemy enemy) {
+		if (enemy instanceof Turtle && ((Turtle) enemy).currentState == Turtle.State.MOVING_SHELL) {
+			setToDestroy = true;
+		} else {
+			reverseVelocity(true, false);
+		}
 	}
 
 	@Override
 	public void hitOnHead(Mario mario) {
 		setToDestroy = true;
 		MarioBros.manager.get("audio/sounds/stomp.wav", Sound.class).play();
+	}
+
+	@Override
+	public void hitByFireBall() {
+		setToDestroy = true;
+		// ADD SOUND EFFECT;
 	}
 
 	public void draw(Batch batch) {

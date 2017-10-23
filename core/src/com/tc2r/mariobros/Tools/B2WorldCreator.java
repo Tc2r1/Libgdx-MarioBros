@@ -27,9 +27,9 @@ import com.tc2r.mariobros.Sprites.TileObjects.Coin;
 
 public class B2WorldCreator {
 
-	private Array<Goomba> goombas;
-	private Array<Wombo> wombos;
-	private Array<Turtle> turtles;
+	private static Array<Goomba> goombas;
+	private static Array<Wombo> wombos;
+	private static Array<Turtle> turtles;
 
 	private World world;
 	private TiledMap map;
@@ -85,13 +85,20 @@ public class B2WorldCreator {
 		}
 
 		// Create all goombas
-		wombos = new Array<Wombo>();
 		goombas = new Array<Goomba>();
 		for (MapObject object : map.getLayers().get(6).getObjects().getByType(RectangleMapObject.class)) {
 			Rectangle rect = ((RectangleMapObject) object).getRectangle();
 
-			wombos.add(new Wombo(screen, rect.getX()/MarioBros.PPM, rect.getY()/MarioBros.PPM));
+			goombas.add(new Goomba(screen, rect.getX()/MarioBros.PPM, rect.getY()/MarioBros.PPM));
 		}
+
+		// Create all Wombas
+		wombos = new Array<Wombo>();
+//		for (MapObject object : map.getLayers().get(8).getObjects().getByType(RectangleMapObject.class)) {
+//			Rectangle rect = ((RectangleMapObject) object).getRectangle();
+//
+//			wombos.add(new Wombo(screen, rect.getX()/MarioBros.PPM, rect.getY()/MarioBros.PPM));
+//		}
 
 		// Create all turtles
 		turtles = new Array<Turtle>();
@@ -102,15 +109,27 @@ public class B2WorldCreator {
 		}
 
 	}
-
-	public Array<Wombo> getGoombas() {
-		return wombos;
-	}
 	public Array<Enemy> getEnemies(){
 		Array<Enemy> enemies = new Array<Enemy>();
 		enemies.addAll(goombas);
 		enemies.addAll(wombos);
 		enemies.addAll(turtles);
 		return enemies;
+	}
+
+	public static void removeEnemy(Enemy enemy) {
+		if(enemy instanceof Turtle){
+			turtles.removeValue((Turtle) enemy, true);
+		}
+		if (enemy instanceof Goomba) {
+			goombas.removeValue((Goomba) enemy, true);
+		}
+		if (enemy instanceof Wombo) {
+			wombos.removeValue((Wombo) enemy, true);
+
+		}
+	}
+	public static void removeTurtle(Turtle turtle){
+		turtles.removeValue(turtle, true);
 	}
 }

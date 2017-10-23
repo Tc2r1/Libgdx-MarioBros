@@ -1,5 +1,6 @@
 package com.tc2r.mariobros.Tools;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
@@ -9,6 +10,7 @@ import com.tc2r.mariobros.MarioBros;
 import com.tc2r.mariobros.Sprites.Enemies.Enemy;
 import com.tc2r.mariobros.Sprites.Items.Item;
 import com.tc2r.mariobros.Sprites.Mario;
+import com.tc2r.mariobros.Sprites.Other.FireBall;
 import com.tc2r.mariobros.Sprites.TileObjects.InteractiveTileObject;
 
 /**
@@ -36,7 +38,7 @@ public class WorldContactListener implements ContactListener {
 
 			// Mario Stomps enemy Head
 			case MarioBros.ENEMY_HEAD_BIT | MarioBros.MARIO_BIT:
-
+				Gdx.app.log("testing", "Stomp enemy Head");
 				if (fixA.getFilterData().categoryBits == MarioBros.ENEMY_HEAD_BIT) {
 					// fixA is the enemy
 					((Enemy)fixA.getUserData()).hitOnHead((Mario) fixB.getUserData());
@@ -48,8 +50,9 @@ public class WorldContactListener implements ContactListener {
 
 			// Enemy Collides with Another Enemy
 			case MarioBros.ENEMY_BIT | MarioBros.ENEMY_BIT:
-				((Enemy) fixA.getUserData()).reverseVelocity(true, false);
-				((Enemy) fixB.getUserData()).reverseVelocity(true, false);
+				((Enemy) fixA.getUserData()).onEnemyHit((Enemy) fixB.getUserData());
+				((Enemy) fixB.getUserData()).onEnemyHit((Enemy) fixA.getUserData());
+
 				break;
 
 			// Enemy Collides with an Object (Pipe, wall, etc)
@@ -59,14 +62,14 @@ public class WorldContactListener implements ContactListener {
 					((Enemy)fixA.getUserData()).reverseVelocity(true, false);
 				} else {
 					// fixB is the enemy
-					((Enemy) fixB.getUserData()).reverseVelocity(true, false);
+					((Enemy)fixB.getUserData()).reverseVelocity(true, false);
 				}
 				break;
 
 			// Mario Collides with an Enemy
 			case MarioBros.MARIO_BIT | MarioBros.ENEMY_BIT:
+				Gdx.app.log("testing", "Enemy Hit Mario");
 				if(fixA.getFilterData().categoryBits == MarioBros.MARIO_BIT)
-					//Gdx.app.log("testing", ((Enemy)fixB.getUserData()));
 					((Mario) fixA.getUserData()).hit((Enemy)fixB.getUserData());
 
 				if(fixB.getFilterData().categoryBits == MarioBros.MARIO_BIT)
@@ -97,7 +100,26 @@ public class WorldContactListener implements ContactListener {
 					((Item) fixB.getUserData()).use((Mario)fixA.getUserData());
 				}
 				break;
-
+			// FireBall Collides with Object.
+			case MarioBros.FIREBALL_BIT | MarioBros.OBJECT_BIT:
+				if (fixA.getFilterData().categoryBits == MarioBros.FIREBALL_BIT) {
+					// fixA is a fireball
+					((FireBall) fixA.getUserData()).setToDestroy();
+				} else {
+					// fixB is a fireball
+					((FireBall) fixB.getUserData()).setToDestroy();
+				}
+				break;
+			// FireBall Collides with Object.
+			case MarioBros.FIREBALL_BIT | MarioBros.ENEMY_BIT:
+				if (fixA.getFilterData().categoryBits == MarioBros.FIREBALL_BIT) {
+					// fixA is a fireball
+					((FireBall) fixA.getUserData()).hit((Enemy)fixB.getUserData());
+				} else {
+					// fixB is a fireball
+					((FireBall) fixB.getUserData()).hit((Enemy)fixA.getUserData());
+				}
+				break;
 
 		}
 	}
